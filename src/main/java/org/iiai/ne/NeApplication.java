@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @ServletComponentScan
-@MapperScan(basePackages = "com.zack.zblog.dao")
+@MapperScan(basePackages = "org.iiai.ne.dao")
 @EnableScheduling
 public class NeApplication {
     public static void main(String[] args) {
