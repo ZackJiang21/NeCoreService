@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.iiai.ne.dao.CouponDao">
+    <resultMap id="coupon" type="org.iiai.ne.model.Coupon">
+        <id property="id" column="ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="status" column="STATUS"/>
+        <result property="value" column="COUPON_VALUE"/>
+        <association property="store" columnPrefix="STORE_" javaType="org.iiai.ne.model.Store">
+            <id property="id" column="ID"/>
+            <result property="name" column="NAME"/>
+        </association>
+    </resultMap>
+    <insert id="insertCoupon" useGeneratedKeys="true" keyProperty="coupon.id">
+        INSERT INTO T_COUPON
+        (COUPON_VALUE, USER_ID, STORE_ID, STATUS)
+        VALUES
+        (#{coupon.value}, #{coupon.userId}, #{coupon.store.id}, #{coupon.status})
+    </insert>
+    <select id="getCouponListByUserId" resultMap="coupon">
+        SELECT C.ID, C.USER_ID, C.COUPON_VALUE, C.STATUS, S.ID AS STORE_ID, S.NAME AS STORE_NAME
+        FROM T_COUPON C
+        LEFT JOIN T_STORE S ON C.STORE_ID = S.ID
+        <where>
+            <if test="sinceId != 0">
+                AND C.ID &lt; #{sinceId}
+            </if>
+            <if test="storeId != 0">
+                AND C.STORE_ID = #{storeId}
+            </if>
+            AND C.USER_ID = #{userId} AND C.STATUS = #{status}
+        </where>
+        ORDER BY ID DESC
+        LIMIT #{limit}
+    </select>
+    <select id="getLeftCount" resultType="int">
+        SELECT COUNT(1)
+        FROM T_COUPON
+        <where>
+            <if test="sinceId != 0">
+                AND ID &lt; #{sinceId}
+            </if>
+            <if test="storeId != 0">
+                AND STORE_ID = #{storeId}
+            </if>
+            AND USER_ID = #{userId} AND STATUS = #{status}
+        </where>
+        ORDER BY ID DESC
+    </select>
+    <select id="getCouponById" resultMap="coupon">
+        SELECT ID, COUPON_VALUE, USER_ID, STORE_ID, STATUS
+        FROM T_COUPON
+        WHERE ID = #{couponId}
+    </select>
+    <update id="updateCouponStatus">
+        UPDATE T_COUPON
+        SET STATUS = #{status}
+        WHERE ID = #{couponId}
+    </update>
+</mapper>

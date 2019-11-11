@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.iiai.ne.dao.OrderDao">
+    <resultMap id="delAddr" type="org.iiai.ne.model.Address">
+        <id column="ID" property="id"/>
+        <result column="USER_NAME" property="userName"/>
+        <result column="PHONE" property="phone"/>
+        <association property="company" columnPrefix="COMPANY_" javaType="org.iiai.ne.model.Company">
+            <id column="ID" property="id"/>
+            <result column="NAME" property="name"/>
+        </association>
+    </resultMap>
+    <resultMap id="order" type="org.iiai.ne.model.Order">
+        <id column="ID" property="id"/>
+        <result column="USER_ID" property="userId"/>
+        <result column="ORIGIN_PRICE" property="originPrice"/>
+        <result column="FINAL_PRICE" property="finalPrice"/>
+        <result column="CREATE_TIME" property="createTime"/>
+        <association property="store" javaType="org.iiai.ne.model.Store" columnPrefix="STORE_">
+            <id property="id" column="ID"/>
+            <result property="name" column="NAME"/>
+        </association>
+    </resultMap>
+    <resultMap id="orderDetail" type="org.iiai.ne.model.OrderDetail" extends="order">
+        <result property="remark" column="REMARK"/>
+        <result property="isDiscount" column="IS_DISCOUNT"/>
+        <association property="coupon" javaType="org.iiai.ne.model.Coupon" columnPrefix="COUPON_">
+            <id property="id" column="ID"/>
+            <result property="value" column="VALUE"/>
+        </association>
+        <association property="address" javaType="org.iiai.ne.model.Address" resultMap="delAddr" columnPrefix="ADDR_"/>
+        <collection property="dishes" columnPrefix="DISH_" ofType="org.iiai.ne.model.Dish">
+            <id property="id" column="ID"></id>
+            <result property="name" column="NAME"></result>
+            <result property="price" column="PRICE"></result>
+            <result property="count" column="COUNT"></result>
+        </collection>
+    </resultMap>
+    <select id="getOrderListByUserId" resultMap="order">
+        SELECT ID, FINAL_PRICE, ORIGIN_PRICE, UNIX_TIMESTAMP(CREATE_TIME) AS CREATE_TIME
+        FROM T_ORDER
+        <where>
+            <if test="sinceId != 0">
+                AND ID &lt; #{sinceId}
+            </if>
+            AND USER_ID = #{userId}
+        </where>
+        ORDER BY ID DESC
+        LIMIT #{limit}
+    </select>
+    <insert id="insertOrder" parameterType="org.iiai.ne.model.OrderDetail" useGeneratedKeys="true"
+            keyProperty="order.id">
+        INSERT INTO T_ORDER
+         (USER_ID, STORE_ID, ORIGIN_PRICE, FINAL_PRICE, IS_DISCOUNT, REMARK, CREATE_TIME, DEL_USER_NAME, DEL_PHONE, DEL_COMPANY, COUPON_ID)
+        VALUES
+         (
+            #{order.userId},
+            #{order.store.id},
+            #{order.originPrice},
+            #{order.finalPrice},
+            #{order.isDiscount},
+            #{order.remark},
+            CURRENT_TIMESTAMP(),
+            #{order.address.userName},
+            #{order.address.phone},
+            #{order.address.company.name},
+            #{order.coupon.id}
+        )
+    </insert>
+    <insert id="insertOrderDetail">
+        INSERT INTO T_ORDER_DETAIL
+        (ORDER_ID, DISH_NAME, DISH_COUNT, DISH_PRICE)
+        VALUES
+        <foreach collection="dishes" separator="),(" item="dish" open="(" close=")">
+            #{orderId}, #{dish.name}, #{dish.count}, #{dish.price}
+        </foreach>
+    </insert>
+    <select id="getLeftCount" resultType="int">
+        SELECT COUNT(1)
+        FROM T_ORDER
+        <where>
+            <if test="sinceId != 0">
+                AND ID &lt; #{sinceId}
+            </if>
+            AND USER_ID = #{userId}
+        </where>
+        ORDER BY ID DESC
+    </select>
+    <select id="getOrderById" resultMap="orderDetail">
+        SELECT O.ID, O.USER_ID, O.ORIGIN_PRICE, O.FINAL_PRICE, O.IS_DISCOUNT, UNIX_TIMESTAMP(O.CREATE_TIME) AS CREATE_TIME, O.REMARK,
+        O.DEL_USER_NAME AS ADDR_USER_NAME, O.DEL_PHONE AS ADDR_PHONE, O.DEL_COMPANY AS ADDR_COMPANY_NAME,
+        OD.DISH_NAME, OD.DISH_COUNT, OD.DISH_PRICE, C.ID AS COUPON_ID, C.COUPON_VALUE
+        FROM T_ORDER O
+        LEFT JOIN T_ORDER_DETAIL OD ON O.ID = OD.ORDER_ID
+        LEFT JOIN T_COUPON C ON O.COUPON_ID = C.ID
+        WHERE O.ID = #{orderId}
+    </select>
+    <select id="getNotRedeemOrderIds" resultType="integer">
+        SELECT ID
+        FROM T_ORDER
+        WHERE USER_ID = #{userId} AND STORE_ID = #{storeId} AND IS_REDEEM = 0
+        LIMIT 10
+    </select>
+    <update id="updateOrderRedeem">
+        UPDATE T_ORDER SET IS_REDEEM = 1
+        WHERE ID IN
+        <foreach collection="orderIds" open="(" close=")" separator="," item="orderId">
+            #{orderId}
+        </foreach>
+    </update>
+</mapper>

@@ -1,0 +1,44 @@
+server:
+  port: 8080
+  tomcat:
+    accesslog:
+      buffered: true
+      directory: /var/log/ne/tomcat
+      enabled: true
+      file-date-format: .yyyy-MM-dd
+      pattern: common
+      prefix: access_log
+      suffix: .log
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/nedb?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: root
+    password: a2#b3332jz
+    driverClassName: com.mysql.cj.jdbc.Driver
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    exceptionSorter: true
+    testOnReturn: false
+    poolPreparedStatements: true
+    filters: stat,wall,log4j
+    maxPoolPreparedStatementPerConnectionSize: 20
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+    useGlobalDataSourceStat: true
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+
+application:
+  wechat:
+    appid: wxdbd6010ffdb3b2a9
+    secret: 82874a61da8fe21fdd6459aeaad20e9d
+
+

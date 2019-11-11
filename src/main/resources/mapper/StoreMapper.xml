@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.iiai.ne.dao.StoreDao">
+    <resultMap id="store" type="org.iiai.ne.model.Store">
+        <id property="id" column="ID"/>
+        <result property="name" column="NAME"/>
+        <result property="isOpen" column="IS_OPEN"/>
+        <result property="publicMsg" column="PUBLIC_MSG"/>
+        <result property="imgUrl" column="IMG_URL"/>
+    </resultMap>
+    <resultMap id="storeDetail" type="org.iiai.ne.model.StoreDetail" extends="store">
+        <result property="startAm" column="START_AM"/>
+        <result property="endAm" column="END_AM"/>
+        <result property="startPm" column="START_PM"/>
+        <result property="endPm" column="END_PM"/>
+        <collection property="activities" ofType="org.iiai.ne.model.StoreActivity" columnPrefix="ACTIVITY_">
+            <result property="type" column="TYPE"/>
+            <result property="text" column="TEXT"/>
+        </collection>
+    </resultMap>
+    <select id="getStoreInfoById" resultMap="storeDetail">
+        SELECT S.ID, NAME, S.IS_OPEN, S.PUBLIC_MSG, S.IMG_URL, D.START_AM, D.END_AM, D.START_PM, D.END_PM, A.TYPE AS ACTIVITY_TYPE, A.TEXT AS ACTIVITY_TEXT
+        FROM T_STORE S
+        LEFT JOIN T_STORE_EXT D ON D.STORE_ID = S.ID
+        LEFT JOIN T_STORE_ACTIVITY A ON A.STORE_ID = S.ID
+        WHERE S.ID = #{storeId}
+    </select>
+    <select id="getStoresInfo" resultMap="storeDetail">
+        SELECT S.ID, NAME, S.IS_OPEN, S.PUBLIC_MSG, S.IMG_URL, D.START_AM, D.END_AM, D.START_PM, D.END_PM
+        FROM T_STORE S
+        LEFT JOIN T_STORE_EXT D ON D.STORE_ID = S.ID
+        LIMIT #{start}, #{limit}
+    </select>
+    <update id="updateStoreStatus">
+        UPDATE T_STORE SET IS_OPEN =
+        <foreach collection="stores" item="store" open="case ID" separator=" " close="end">
+            WHEN #{store.id} THEN #{store.isOpen}
+        </foreach>
+        WHERE ID IN
+        <foreach collection="stores" item="store" separator="," open="(" close=")">
+            #{store.id}
+        </foreach>
+    </update>
+</mapper>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.iiai.ne.dao.AddressDao">
+    <resultMap id="delAddr" type="org.iiai.ne.model.Address">
+        <id column="ID" property="id"/>
+        <result column="USER_ID" property="userId"/>
+        <result column="USER_NAME" property="userName"/>
+        <result column="PHONE" property="phone"/>
+        <association property="company" columnPrefix="COMPANY_" javaType="org.iiai.ne.model.Company">
+            <id column="ID" property="id"/>
+            <result column="NAME" property="name"/>
+        </association>
+    </resultMap>
+    <insert id="insertDeliverAddr" parameterType="org.iiai.ne.model.Address" useGeneratedKeys="true"
+            keyProperty="address.id">
+        INSERT INTO T_DELIVER_ADDRESS (USER_NAME, USER_ID, PHONE, COMPANY_ID) VALUES
+        (#{address.userName}, #{address.userId}, #{address.phone}, #{address.company.id})
+    </insert>
+    <select id="getDelAddrByUserId" resultMap="delAddr">
+        SELECT A.ID, A.USER_ID, A.USER_NAME, A.PHONE, C.ID AS COMPANY_ID, C.NAME AS COMPANY_NAME
+        FROM T_DELIVER_ADDRESS A
+        LEFT JOIN T_DELIVER_COMPANY C ON C.ID = A.COMPANY_ID
+        WHERE A.USER_ID = #{userId} ORDER BY ID
+    </select>
+    <delete id="deleteDelAddrById">
+        DELETE FROM T_DELIVER_ADDRESS WHERE ID = #{addrId}
+    </delete>
+    <select id="getAddrIdsByUserId" resultType="integer">
+        SELECT ID
+        FROM T_DELIVER_ADDRESS
+        WHERE USER_ID = #{userId}
+    </select>
+    <update id="updateDelAddr">
+        UPDATE T_DELIVER_ADDRESS
+        SET
+        USER_NAME = #{address.userName},
+        PHONE = #{address.phone},
+        COMPANY_ID = #{address.company.id}
+        WHERE ID = #{address.id}
+    </update>
+    <select id="getAddressById" resultMap="delAddr">
+        SELECT A.ID, A.USER_ID, A.USER_NAME, A.PHONE, C.ID AS COMPANY_ID, C.NAME AS COMPANY_NAME
+        FROM T_DELIVER_ADDRESS A
+        LEFT JOIN T_DELIVER_COMPANY C ON C.ID = A.COMPANY_ID
+        WHERE A.ID = #{addrId} AND A.USER_ID = #{userId}
+    </select>
+</mapper>

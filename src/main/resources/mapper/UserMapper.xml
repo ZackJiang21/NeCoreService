@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.iiai.ne.dao.UserDao">
+    <select id="getUser" resultType="org.iiai.ne.model.User">
+        SELECT ID, OPENID, WECHATNAME, IMGURL
+        FROM T_USER
+        <where>
+            <if test="openId != null">
+                AND OPENID = #{openId}
+            </if>
+            <if test="userId != 0">
+                AND ID = #{userId}
+            </if>
+        </where>
+    </select>
+    <insert id="insertUser" parameterType="org.iiai.ne.model.User" useGeneratedKeys="true" keyProperty="user.id">
+        INSERT INTO T_USER (OPENID, WECHATNAME, IMGURL)
+        VALUES (#{user.openId}, #{user.weChatName}, #{user.imgUrl})
+    </insert>
+</mapper>

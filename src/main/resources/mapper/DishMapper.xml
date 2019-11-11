@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.iiai.ne.dao.DishDao">
+    <resultMap id="dishCategory" type="org.iiai.ne.model.DishCategory">
+        <id property="id" column="ID"/>
+        <result property="name" column="NAME"/>
+        <collection property="dishes" columnPrefix="DISH_" ofType="org.iiai.ne.model.Dish">
+            <id property="id" column="ID"></id>
+            <result property="name" column="NAME"/>
+            <result property="price" column="PRICE"/>
+        </collection>
+    </resultMap>
+    <select id="getDishesWithCategory" resultMap="dishCategory">
+        SELECT
+        C.ID AS ID,
+        C.NAME AS NAME,
+        D.ID AS DISH_ID,
+        D.NAME AS DISH_NAME,
+        D.PRICE AS DISH_PRICE
+         FROM T_DISH_CATEGORY C
+         LEFT JOIN T_DISH D ON C.ID=D.CATEGORY
+    </select>
+    <select id="getDishByIds" resultType="org.iiai.ne.model.Dish">
+        SELECT ID, NAME, PRICE, STORE
+        FROM T_DISH
+        WHERE ID IN
+        <foreach collection="dishIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>
