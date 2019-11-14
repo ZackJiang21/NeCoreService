@@ -10,6 +10,14 @@ server:
       prefix: access_log
       suffix: .log
 spring:
+  kafka:
+    bootstrap-servers: 10.10.1.149:9092
+    producer:
+      retries: 0
+      acks: 1
+      buffer-memory: 40960
+      batch-size: 4096
+
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     url: jdbc:mysql://localhost:3306/nedb?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false

@@ -18,4 +18,12 @@ public interface ConstantUtil {
     interface ActivityType {
         int GIFT = 1;
     }
+
+    interface KafkaEvent {
+        String ORDER_EVENT = "orderEvent";
+
+        interface Type {
+            String ADD = "add";
+        }
+    }
 }

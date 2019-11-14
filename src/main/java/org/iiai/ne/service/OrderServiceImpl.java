@@ -1,15 +1,21 @@
 package org.iiai.ne.service;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import org.apache.tomcat.util.bcel.Const;
 import org.iiai.ne.dao.*;
 import org.iiai.ne.exception.BadRequestException;
 import org.iiai.ne.exception.HttpNotFoundException;
 import org.iiai.ne.model.*;
 import org.iiai.ne.util.ConstantUtil;
+import org.iiai.ne.util.EventUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +25,9 @@ import java.util.stream.Collectors;
 @Service
 public class OrderServiceImpl implements OrderService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderServiceImpl.class);
+
+    @Autowired
+    private KafkaTemplate kafkaTemplate;
 
     @Autowired
     private DishDao dishDao;
@@ -73,6 +82,13 @@ public class OrderServiceImpl implements OrderService {
         if (coupon != null) {
             couponDao.updateCouponStatus(coupon.getId(), ConstantUtil.CouponStatus.IS_USED);
         }
+        sendAddOrderEvent(order);
+
+    }
+
+    private void sendAddOrderEvent(OrderDetail order) {
+        KafkaEvent event = new KafkaEvent(ConstantUtil.KafkaEvent.Type.ADD, JSON.toJSONString(order));
+        kafkaTemplate.send(ConstantUtil.KafkaEvent.ORDER_EVENT, JSON.toJSONString(event));
     }
 
     private int getFinalPrice(Coupon coupon, int originPrice) {
