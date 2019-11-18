@@ -56,7 +56,7 @@ public class TokenUtil {
     public static DecodedJWT verifyJwt(String token) {
         try {
             if (token == null) {
-                throw new NotPermittedException();
+                throw new UnAuthorizedException();
             }
             Algorithm algorithm = Algorithm.HMAC256(key);
             JWTVerifier verifier = JWT.require(algorithm)
